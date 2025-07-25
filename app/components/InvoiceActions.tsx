@@ -60,9 +60,6 @@ export function InvoiceActions({id, status}: iAppProps) {
           <DownloadCloudIcon className="size-4 mr-2" /> Download Invoice
         </Link>
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={handleSendReminder}>
-        <Mail className="size-4 mr-2" /> Reminder Email
-      </DropdownMenuItem>
       <DropdownMenuItem asChild>
         <Link href={`/dashboard/invoices/${id}/delete`}>
           <Trash className="size-4 mr-2" /> Delete Invoice

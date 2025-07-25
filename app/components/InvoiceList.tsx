@@ -13,16 +13,33 @@ import { requireUser } from "../utils/hooks";
 import { formatCurrency } from "../utils/formatCurrency";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "./EmptyState";
-import { SearchParams } from "@/types/next";
+
+// Define SearchParams type directly here
+type SearchParams = {
+  [key: string]: string | string[] | undefined;
+};
 
 async function getData(userId: string, search?: string) {
   const where: any = { userId };
 
   if (search && search.trim()) {
-    where.OR = [
+    const searchConditions: any[] = [
+      // Always search in client name (string field)
       { clientName: { contains: search, mode: "insensitive" } },
-      { invoiceNumber: { contains: search, mode: "insensitive" } }, // Added insensitive mode here too
     ];
+
+    // Handle invoiceNumber search (integer field)
+    const numericSearch = parseInt(search.trim(), 10);
+    if (!isNaN(numericSearch)) {
+      // If search term is a valid number, search by exact invoice number
+      searchConditions.push({ invoiceNumber: numericSearch });
+    }
+
+    // You can also search in other string fields if needed
+    // searchConditions.push({ fromName: { contains: search, mode: "insensitive" } });
+    // searchConditions.push({ clientEmail: { contains: search, mode: "insensitive" } });
+
+    where.OR = searchConditions;
   }
 
   const data = await prisma.invoice.findMany({
@@ -33,6 +50,7 @@ async function getData(userId: string, search?: string) {
       total: true,
       createdAt: true,
       status: true,
+      date: true,
       invoiceNumber: true,
       currency: true,
     },
@@ -51,7 +69,7 @@ type Props = {
 export async function InvoiceList({ searchParams }: Props) {
   const session = await requireUser();
   const search = searchParams?.search || "";
-  const data = await getData(session.user?.id as string, search);
+  const data = await getData(session.user?.id as string, search as string);
 
   return (
     <>
@@ -97,9 +115,10 @@ export async function InvoiceList({ searchParams }: Props) {
                 </TableCell>
                 <TableCell>
                   {new Intl.DateTimeFormat("en-US", {
-                    dateStyle: "medium",
-                  }).format(invoice.createdAt)}
+                  dateStyle: "medium",
+                  }).format(new Date(invoice.date))}
                 </TableCell>
+
                 <TableCell className="text-right">
                   <InvoiceActions status={invoice.status} id={invoice.id} />
                 </TableCell>

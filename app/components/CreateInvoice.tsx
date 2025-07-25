@@ -126,7 +126,8 @@ export function CreateInvoice({
                   name={fields.fromName.name}
                   key={fields.fromName.key}
                   placeholder="Your Name"
-                  defaultValue={firstName + " " + lastName}
+                  defaultValue={`${firstName ?? ""} ${lastName ?? ""}`.trim()}
+
                 />
                 <p className="text-red-500 text-sm">{fields.fromName.errors}</p>
                 <Input

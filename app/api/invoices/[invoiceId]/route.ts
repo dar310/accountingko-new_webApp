@@ -135,3 +135,71 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+export async function PATCH(request: Request, { params }: { params: Promise<{ invoiceId: string }> }) {
+  try {
+    const user = await requireUserFromAPI(request);
+    const { invoiceId } = await params;
+    const { status } = await request.json();
+
+    if (!status) {
+      return NextResponse.json({ success: false, message: "Status is required" }, { status: 400 });
+    }
+
+    // Validate status is one of the allowed values
+    const allowedStatuses = ["PAID", "PENDING"];
+    if (!allowedStatuses.includes(status)) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "Invalid status value. Allowed values are: paid and pending" 
+      }, { status: 400 });
+    }
+
+    // Find invoice where either mobileUserId or userId matches
+    const invoice = await prisma.invoice.findFirst({
+      where: {
+        id: invoiceId,
+        OR: [
+          { mobileUserId: user.id },
+          { userId: user.userId }
+        ],
+      },
+    });
+
+    if (!invoice) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "Invoice not found or no permission" 
+      }, { status: 404 });
+    }
+
+    // Update only the status field
+    const updatedInvoice = await prisma.invoice.update({
+      where: { id: invoiceId },
+      data: { status },
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      message: "Invoice status updated successfully" 
+    });
+
+  } catch (error: any) {
+    if (error.message === "Authorization header missing or invalid" || error.message === "Invalid or expired token") {
+      return NextResponse.json({ 
+        success: false, 
+        message: error.message 
+      }, { status: 401 });
+    }
+    if (error.code === 'P2025') {
+      return NextResponse.json({ 
+        success: false, 
+        message: "Invoice not found or no permission" 
+      }, { status: 404 });
+    }
+    console.error("Error updating invoice status:", error);
+    return NextResponse.json({ 
+      success: false, 
+      message: "Internal server error" 
+    }, { status: 500 });
+  }
+}

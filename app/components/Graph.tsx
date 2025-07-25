@@ -1,11 +1,13 @@
 "use client";
 
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 interface iAppProps {
   data: {
@@ -15,29 +17,28 @@ interface iAppProps {
 }
 
 export function Graph({ data }: iAppProps) {
+  if (!data || data.length === 0) return <div>No data to display</div>;
+
   return (
-    <ChartContainer
-      config={{
-        amount: {
-          label: "Amount",
-          color: "hsl(var(--primary))",
-        },
-      }}
-      className="min-h-[300px]"
-    >
-      <ResponsiveContainer width="100%" height="100%">
+    <div style={{ minHeight: 300 }}>
+      <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>
           <XAxis dataKey="date" />
           <YAxis />
-          <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+          <Tooltip
+            formatter={(value: number) => [`₱${value.toFixed(2)}`, "Amount"]}
+            labelFormatter={(label: string) => `Date: ${label}`}
+          />
           <Line
             type="monotone"
             dataKey="amount"
-            stroke="var(--color-amount)"
+            stroke="#000000"
             strokeWidth={2}
+            dot={{ r: 4, stroke: "#000000", fill: "#000000" }}
           />
         </LineChart>
       </ResponsiveContainer>
-    </ChartContainer>
+    </div>
   );
 }
+

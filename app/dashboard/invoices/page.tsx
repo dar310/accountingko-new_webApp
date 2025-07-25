@@ -12,7 +12,16 @@ import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 
-export default function InvoicesRoute() {
+type SearchParams = {
+  [key: string]: string | string[] | undefined;
+};
+
+type Props = {
+  searchParams: SearchParams;
+};
+
+
+export default function InvoicesRoute({ searchParams }: Props) {
   return (
     <Card>
       <CardHeader>
@@ -28,7 +37,7 @@ export default function InvoicesRoute() {
       </CardHeader>
       <CardContent>
         <Suspense fallback={<Skeleton className="w-full h-[500px]" />}>
-          <InvoiceList />
+        <InvoiceList searchParams={searchParams} />
         </Suspense>
       </CardContent>
     </Card>
